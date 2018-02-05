@@ -1,0 +1,57 @@
+<MainWidget>:
+	GridLayout:
+		size: root.width, root.height
+		rows: 2
+		cols: 1
+		BoxLayout:
+			orientation: "horizontal"
+			
+			size_hint_y: None
+			height: 60
+			
+			GridLayout:
+				size_hint_x: None
+				width: 200
+				rows: 2
+				cols: 3
+				Button:
+					text: "New"
+					size_hint_x: 0.3
+					size_hint_y: 0.5
+				Button:
+					text: "Save"
+					size_hint_x: 0.3
+					size_hint_y: 0.5
+				Button:
+					text: "Save As"
+					size_hint_x: 0.3
+					size_hint_y: 0.5
+				Button:
+					text: "Load"
+					size_hint_x: 0.3
+					size_hint_y: 0.5
+				Button:
+					text: "Compile"
+					size_hint_x: 0.3
+					size_hint_y: 0.5
+				Button:
+					text: "Run"
+					size_hint_x: 0.3
+					size_hint_y: 0.5
+			Button:
+				text: ""
+				size_hint_x: 0.1
+		TabbedPanel:
+			tab_pos: "bottom_left"
+			default_tab: tpi_0
+			TabbedPanelItem:
+				text: "File Chooser"
+				id: tpi_0
+				FileChooserIconView:
+					id: filechooser
+			TabbedPanelItem:
+				text: "1"
+			TabbedPanelItem:
+				text: "2"
+			
+			
