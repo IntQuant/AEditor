@@ -7,6 +7,13 @@ from kivy.logger import Logger
 current = {}
 load_thread = None
 
+def get_int(name):
+	ret = get(name)
+	if ret.isalnum():
+		return int(ret)
+	else:
+		return 0
+
 def get(name):
 	global current
 	join()
