@@ -1,0 +1,30 @@
+<VisualSnippet>:
+	rows:1
+	cols:2
+	canvas:
+		Color:
+			rgba: 0.5, 0.5, 0.5, 1
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	BoxLayout:
+		orientation: "vertical"
+		Label: 
+			text: "Test" #self.name
+			size_hint_y: None
+			height: 20
+		BoxLayout:
+			Button:
+				text: "inp"
+			Button:
+				text: "out"
+
+
+
+
+<VisualEditor>:
+	VisualSnippet:
+		pos: 200, 200
+		size: 100, 100
+		size_hint_x: None
+		size_hint_y: None
