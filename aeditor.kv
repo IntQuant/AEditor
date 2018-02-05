@@ -1,3 +1,36 @@
+#:import get l18n.get
+
+<Label>:
+    font_name: 'FreeSansOblique.ttf'
+
+<VisualSnippet>:
+	rows:1
+	cols:2
+	canvas:
+		Color:
+			rgba: 0.5, 0.5, 0.5, 1
+		Rectangle:
+			pos: self.pos
+			size: self.size
+	BoxLayout:
+		orientation: "vertical"
+		Label: 
+			text: "Test" #self.name
+			size_hint_y: None
+			height: 20
+		BoxLayout:
+			Button:
+				text: "inp"
+			Button:
+				text: "out"
+
+<VisualEditor>:
+	VisualSnippet:
+		pos: 200, 200
+		size: 100, 100
+		size_hint_x: None
+		size_hint_y: None
+
 <MainWidget>:
 	GridLayout:
 		size: root.width, root.height
@@ -15,27 +48,27 @@
 				rows: 2
 				cols: 3
 				Button:
-					text: "New"
+					text: get("New")
 					size_hint_x: 0.3
 					size_hint_y: 0.5
 				Button:
-					text: "Save"
+					text: get("Save")
 					size_hint_x: 0.3
 					size_hint_y: 0.5
 				Button:
-					text: "Save As"
+					text: get("Compile")
 					size_hint_x: 0.3
 					size_hint_y: 0.5
 				Button:
-					text: "Load"
+					text: get("Load")
 					size_hint_x: 0.3
 					size_hint_y: 0.5
 				Button:
-					text: "Compile"
+					text: get("Save As")
 					size_hint_x: 0.3
 					size_hint_y: 0.5
 				Button:
-					text: "Run"
+					text: get("Run")
 					size_hint_x: 0.3
 					size_hint_y: 0.5
 			Button:
@@ -51,6 +84,7 @@
 					id: filechooser
 			TabbedPanelItem:
 				text: "1"
+				VisualEditor:
 			TabbedPanelItem:
 				text: "2"
 			
