@@ -1,33 +1,27 @@
 import l18n
-import locale
 
-lc = locale.getdefaultlocale()[0]
-available = l18n.get_lang_list()
-fitting = list(filter(lambda x:lc in x, available))
+l18n.init()
 
-if len(fitting) > 0:
-	l18n.thread_load(fitting[0])
-else:
-	l18n.thread_load()
+from kivy.app		 	import App
+from kivy.uix.widget 	import Widget
+from kivy.clock 		import Clock
+from kivy.logger 		import Logger
 
-#l18n.thread_load()
-
-from kivy.app import App
-from kivy.uix.widget import Widget
-import kivy.resources
-
-#kivy.resources.resource_add_path('C:\Windows\Fonts')
-
-from editor_visual import VisualEditor
+from editor_visual 		import VisualEditor
 
 class MainWidget(Widget):
-	pass
-
-
+	def init_all(self):
+		Clock.schedule_once(self.init, 5)
+	def init(self, dt):
+		for child in self.walk():
+			#print(child)
+			if hasattr(child, "ae_init"):
+				child.ae_init()
+				Logger.info("Initialized %s" % child)
 class AEditorApp(App):
 	def build(self):
-		return MainWidget()
+		MW = MainWidget()
+		MW.init_all()
+		return MW
 
-#l18n.join()
-#print(l18n.current)
 AEditorApp().run()

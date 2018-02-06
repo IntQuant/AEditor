@@ -1,18 +1,29 @@
 import pathlib
 import threading
 import sys
+import locale
 
 from kivy.logger import Logger
 
 current = {}
 load_thread = None
 
-def get_int(name):
+def init():
+	lc = locale.getdefaultlocale()[0]
+	available = get_lang_list()
+	fitting = list(filter(lambda x:lc in x, available))
+
+	if len(fitting) > 0:
+		thread_load(fitting[0])
+	else:
+		thread_load()
+
+def get_int(name, default=0):
 	ret = get(name)
 	if ret.isalnum():
 		return int(ret)
 	else:
-		return 0
+		return default
 
 def get(name):
 	global current

@@ -1,4 +1,5 @@
 #:import get l18n.get
+#:import get_int l18n.get_int
 
 <Label>:
     font_name: 'FreeSansOblique.ttf'
@@ -6,16 +7,19 @@
 <VisualSnippet>:
 	rows:1
 	cols:2
+	size: 100, 100
+	size_hint_x: None
+	size_hint_y: None
 	canvas:
 		Color:
-			rgba: 0.5, 0.5, 0.5, 1
+			rgba: 0.5, 0.5, 0.5, 0.75
 		Rectangle:
 			pos: self.pos
 			size: self.size
 	BoxLayout:
 		orientation: "vertical"
 		Label: 
-			text: "Test" #self.name
+			text: root.get_snippet_name()
 			size_hint_y: None
 			height: 20
 		BoxLayout:
@@ -25,11 +29,35 @@
 				text: "out"
 
 <VisualEditor>:
-	VisualSnippet:
-		pos: 200, 200
-		size: 100, 100
+	grid_lay: box_lay
+	snippet_area: fl_lay
+	ScrollView:
+		pos: root.pos
+		width: 200
 		size_hint_x: None
-		size_hint_y: None
+		do_scroll_x: False
+		BoxLayout:
+			id: box_lay
+			height: 10
+			size_hint_y: None
+			orientation: "vertical"
+
+
+	StencilView:
+		pos: root.pos
+		FloatLayout:
+			size: root.size
+			canvas:
+				Color:
+					rgba: 1, 1, 1, 0.25*0.5
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			pos: root.pos
+			id: fl_lay
+			#VisualSnippet:
+			#	pos: 200, 200
+
 
 <MainWidget>:
 	GridLayout:
@@ -44,32 +72,32 @@
 			
 			GridLayout:
 				size_hint_x: None
-				width: get("fileworks_panel_width")
+				width: get_int("fileworks_panel_width", default=200)
 				rows: 2
 				cols: 3
 				Button:
 					text: get("New")
-					size_hint_x: 0.3
+					size_hint_x: 0.3333
 					size_hint_y: 0.5
 				Button:
 					text: get("Save")
-					size_hint_x: 0.3
+					size_hint_x: 0.3333
 					size_hint_y: 0.5
 				Button:
 					text: get("Compile")
-					size_hint_x: 0.3
+					size_hint_x: 0.3333
 					size_hint_y: 0.5
 				Button:
 					text: get("Load")
-					size_hint_x: 0.3
+					size_hint_x: 0.3333
 					size_hint_y: 0.5
 				Button:
 					text: get("Save As")
-					size_hint_x: 0.3
+					size_hint_x: 0.3333
 					size_hint_y: 0.5
 				Button:
 					text: get("Run")
-					size_hint_x: 0.3
+					size_hint_x: 0.3333
 					size_hint_y: 0.5
 			Button:
 				text: ""
@@ -84,6 +112,7 @@
 					id: filechooser
 			TabbedPanelItem:
 				text: "1"
+				index: 10
 				VisualEditor:
 			TabbedPanelItem:
 				text: "2"
