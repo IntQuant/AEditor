@@ -52,6 +52,40 @@ class VisualEditor(FloatLayout):
 		Clock.schedule_once(self.init_grid_lay, 1)
 		super(VisualEditor, self).__init__(**kwargs)
 	
+	def on_touch_down(self, touch):
+		if super().on_touch_move(touch):
+			return True
+		
+		if touch.button == MOVE_BUTTON and self.collide_point(touch.x, touch.y):
+			for child in self.snippet_area.children:
+				if child.collide_point(touch.x, touch.y):
+					break
+			else:
+				touch.grab(self)
+				return True
+		
+		return super().on_touch_down(touch)
+	
+	def on_touch_move(self, touch):
+		if super().on_touch_move(touch):
+			return True
+		
+		if touch.button == MOVE_BUTTON:
+			if touch.grab_current is self:
+				for child in self.snippet_area.children:
+					child.pos[0] += touch.dx
+					child.pos[1] += touch.dy
+				return True
+		
+	def on_touch_up(self, touch):
+		if super().on_touch_up(touch):
+			return True
+		
+		if touch.button == MOVE_BUTTON and self.collide_point(touch.x, touch.y):
+			if touch.grab_current is self:
+				touch.ungrab(self)
+				return True
+
 	def button_factory(self, snippet):
 		def f(*args):
 			snp = snippet()
