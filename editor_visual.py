@@ -9,6 +9,9 @@ from kivy.uix.boxlayout			import BoxLayout
 from kivy.uix.button			import Button
 from kivy.properties			import ObjectProperty
 from kivy.clock 				import Clock
+from kivy.core.window 				import Window
+
+from QLibs 						import qvec
 
 MOVE_BUTTON = "right"
 
@@ -29,6 +32,7 @@ class VisualSnippet(BoxLayout):
 	def on_touch_move(self, touch):
 		if touch.button == MOVE_BUTTON:
 			if touch.grab_current is self:
+				#print(touch.dx, touch.dy)
 				self.pos = self.pos[0] + touch.dx, self.pos[1] + touch.dy
 				return True
 		
@@ -51,9 +55,33 @@ class VisualEditor(FloatLayout):
 	def __init__(self, **kwargs):
 		Clock.schedule_once(self.init_grid_lay, 1)
 		super(VisualEditor, self).__init__(**kwargs)
+		Window.bind(on_motion=self.on_motion)
+	
+	def on_motion(self, etype, stm ,touch):
+		mult = 0
+		
+		if touch.is_mouse_scrolling:
+			if touch.button == 'scrolldown':
+				mult = 0.1
+			if touch.button == 'scrollup':
+				mult = -0.1
+		else:
+			return
+		
+		if self.collide_point(touch.x, touch.y):
+			for child in self.snippet_area.children:
+				if child.collide_point(touch.x, touch.y):
+					break
+			else:
+				if touch.is_mouse_scrolling:
+					#print("Scrolling")
+					for child in self.snippet_area.children:
+						tv = qvec.VecNd(tuple(child.pos)) - qvec.VecNd(tuple(touch.pos))
+						tv *= mult
+						child.pos = (qvec.VecNd(child.pos) + tv).to_tuple()
 	
 	def on_touch_down(self, touch):
-		if super().on_touch_move(touch):
+		if super().on_touch_down(touch):
 			return True
 		
 		if touch.button == MOVE_BUTTON and self.collide_point(touch.x, touch.y):
@@ -72,6 +100,7 @@ class VisualEditor(FloatLayout):
 		
 		if touch.button == MOVE_BUTTON:
 			if touch.grab_current is self:
+				#print(touch.dx, touch.dy)
 				for child in self.snippet_area.children:
 					child.pos[0] += touch.dx
 					child.pos[1] += touch.dy
