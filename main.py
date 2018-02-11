@@ -18,6 +18,9 @@ class MainWidget(Widget):
 			if hasattr(child, "ae_init"):
 				child.ae_init()
 				Logger.info("Initialized %s" % child)
+
+
+
 class AEditorApp(App):
 	def build(self):
 		MW = MainWidget()

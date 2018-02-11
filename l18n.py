@@ -8,6 +8,7 @@ from kivy.logger import Logger
 current = {}
 load_thread = None
 
+
 def init():
 	lc = locale.getdefaultlocale()[0]
 	available = get_lang_list()
@@ -18,12 +19,14 @@ def init():
 	else:
 		thread_load()
 
+
 def get_int(name, default=0):
 	ret = get(name)
 	if ret.isalnum():
 		return int(ret)
 	else:
 		return default
+
 
 def get(name):
 	global current
@@ -33,6 +36,7 @@ def get(name):
 	else:
 		return name
 
+
 def join():
 	global load_thread
 	if load_thread:
@@ -40,12 +44,14 @@ def join():
 		Logger.info("l18n: Joined loading thread")
 	load_thread = None
 
+
 def get_lang_list():
 	return list(
 	  map(lambda x:x.name, 
 	  filter(lambda x:x.is_dir()==False, 
 	  pathlib.Path("./lang").iterdir()
 	  )))
+
 	
 def thread_load(lang="en_US"):
 	#print("Starting loader thread")
@@ -53,6 +59,7 @@ def thread_load(lang="en_US"):
 	load_thread = threading.Thread(target=load, kwargs={"lang":lang})
 	load_thread.start()
 	Logger.info("l18n: Started loader thread")
+
 
 def load(lang="en_US"):
 	global current
@@ -68,6 +75,7 @@ def load(lang="en_US"):
 			except:
 				Logger.warning("l18n: error while parsing '%s'" % line)
 	Logger.info("l18n: Loaded %s" % lang)
+
 	
 if __name__ == "__main__":
 	print(get_lang_list())

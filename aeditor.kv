@@ -10,6 +10,9 @@
 	size: 100, 100
 	size_hint_x: None
 	size_hint_y: None
+	
+	conn_area: conn_area
+	
 	canvas:
 		Color:
 			rgba: 0.5, 0.5, 0.5, 0.75
@@ -18,15 +21,14 @@
 			size: self.size
 	BoxLayout:
 		orientation: "vertical"
-		Label: 
+		id: conn_area		
+		Button: 
 			text: root.get_snippet_name()
 			size_hint_y: None
 			height: 20
-		BoxLayout:
-			Button:
-				text: "inp"
-			Button:
-				text: "out"
+			on_press: root.editor.remove_snippet(root)
+		
+			
 
 <VisualEditor>:
 	grid_lay: box_lay
