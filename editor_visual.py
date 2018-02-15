@@ -28,7 +28,7 @@ class VisualSnippet(BoxLayout):
 	valid 		= BooleanProperty(True)
 	
 	def invalidate(self):
-		valid = False
+		self.valid = False
 	
 	def connector_factory(self, connector):
 		bt = Button(text=connector.name)
@@ -273,6 +273,7 @@ class VisualEditor(FloatLayout):
 	
 	def update_connections(self):
 		for conn in self.connections[:]:
+			print(conn.input.parent, conn.output.parent)
 			if not (conn.input.parent.valid and conn.output.parent.valid):
 				self.connections.remove(conn)
 	
@@ -280,13 +281,7 @@ class VisualEditor(FloatLayout):
 		try: #TODO: remove connections on widget removing
 			child = snippet
 			print(child)
-			"""
-			for conn in self.connections[:]:
-				print(conn.input.parent, conn.output.parent)
-				if conn.input.parent is child or conn.output.parent is child:
-					self.connections.remove(conn)
-					print("Removed ", conn)
-			"""
+			print(snippet)
 			snippet.invalidate()
 			self.snippet_area.remove_widget(snippet)
 			self.update_connections()
