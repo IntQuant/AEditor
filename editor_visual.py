@@ -10,6 +10,7 @@ from kivy.uix.button			import Button
 from kivy.properties			import ObjectProperty, ListProperty, BooleanProperty
 from kivy.clock 				import Clock
 from kivy.core.window 			import Window
+from kivy.graphics 				import Color, Line, InstructionGroup
 
 from QLibs 						import qvec
 
@@ -39,6 +40,7 @@ class VisualSnippet(BoxLayout):
 				self.editor.connection_ender 	= connector
 			self.editor.try_to_make_connection()
 			
+		connector.button = bt
 		bt.bind(on_press=disp)
 		return bt
 	
@@ -157,11 +159,28 @@ class VisualEditor(FloatLayout):
 	
 	def __init__(self, **kwargs):
 		Clock.schedule_once(self.init_grid_lay, 1)
+		Clock.schedule_interval(self.update, 1/20)
 		super(VisualEditor, self).__init__(**kwargs)
 		Window.bind(on_motion=self.on_motion)
 		
 		self.connection_starter	= None
 		self.connection_ender	= None
+		
+		self.line_group = InstructionGroup()
+		self.canvas.add(self.line_group)
+	
+	
+	def update(self, dt):
+		if len(self.connections)>0:
+			self.line_group.clear()
+			for conn in self.connections:
+				self.line_group.add(Color(*conn.get_color()))
+				self.line_group.add(Line(points=(conn.input.get_pos()+conn.output.get_pos()), width=1))
+		else:
+			self.line_group.clear()
+					
+			
+		
 	
 	
 	def try_to_make_connection(self):
@@ -173,12 +192,10 @@ class VisualEditor(FloatLayout):
 				if conn.input == self.connection_starter and conn.output == self.connection_ender:
 					break
 			else:
-				print("Can make connection!")
 				self.connections.append(Connection(self.connection_starter, self.connection_ender, self.connection_ender.conn_type))
 			
 			self.connection_starter = None
 			self.connection_ender = None
-		print(self.connections)
 		
 			
 	def on_motion(self, etype, stm ,touch):
@@ -270,21 +287,15 @@ class VisualEditor(FloatLayout):
 				target_height += child.height
 			
 			self.grid_lay.height = target_height
+
 	
 	def update_connections(self):
 		for conn in self.connections[:]:
-			print(conn.input.parent, conn.output.parent)
 			if not (conn.input.parent.valid and conn.output.parent.valid):
 				self.connections.remove(conn)
+
 	
 	def remove_snippet(self, snippet):
-		try: #TODO: remove connections on widget removing
-			child = snippet
-			print(child)
-			print(snippet)
-			snippet.invalidate()
-			self.snippet_area.remove_widget(snippet)
-			self.update_connections()
-			print("Success!")
-		except Exception as e:
-			print(e)
+		snippet.invalidate()
+		self.snippet_area.remove_widget(snippet)
+		self.update_connections()

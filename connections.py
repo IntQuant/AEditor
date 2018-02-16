@@ -28,11 +28,12 @@ class Connection():
 	def __init__(self, inp, out, conn_type):
 		self.input = inp
 		self.output =out
-		self.conn_type = ConnectionType
+		self.conn_type = conn_type
 		self.valid = True
 	
 	
 	def get_color(self):
+		print(self.conn_type)
 		return self.conn_type.color
 
 
@@ -43,7 +44,14 @@ class Connector():
 		self.parent = parent
 		self.is_inp = is_inp
 		self.name = name
-
+		self.button = None
+	
+	
+	def get_pos(self):
+		if self.button:
+			return self.button.center # TODO
+		else:
+			return (0, 0)
 
 
 if __name__ == "__main__":
