@@ -1,4 +1,1 @@
-New=Новый файл
-Save=Сохранить
-Save As=Сохранить как
 fileworks_panel_width=400

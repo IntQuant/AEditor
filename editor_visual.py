@@ -11,10 +11,13 @@ from kivy.properties			import ObjectProperty, ListProperty, BooleanProperty
 from kivy.clock 				import Clock
 from kivy.core.window 			import Window
 from kivy.graphics 				import Color, Line, InstructionGroup
+from kivy.logger 				import Logger
 
 from QLibs 						import qvec
 
-from connections import Connection, ConnectionType, Connector
+from connections 				import Connection, ConnectionType, Connector
+
+from random						import getrandbits
 
 MOVE_BUTTON = "right"
 
@@ -27,6 +30,7 @@ class VisualSnippet(BoxLayout):
 	conn_area 	= ObjectProperty(None)
 	editor 		= ObjectProperty(None)
 	valid 		= BooleanProperty(True)
+	
 	
 	def invalidate(self):
 		self.valid = False
@@ -48,6 +52,7 @@ class VisualSnippet(BoxLayout):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		Clock.schedule_once(self.on_next_sched)
+		self.uuid = getrandbits(512)
 	
 		
 	def get_state(self):
@@ -55,19 +60,19 @@ class VisualSnippet(BoxLayout):
 	
 	
 	def on_next_sched(self, dt):
-		if self.editor:
+		if self.conn_area:
 			for connector in self.get_connectors():
 				self.conn_area.add_widget(self.connector_factory(connector))
 		else:
 			Clock.schedule_once(self.on_next_sched, 1)
-	
 	
 	@staticmethod
 	def get_snippet_name():
 		return "None"
 	
 	
-	def get_connectors(self):
+	@staticmethod
+	def get_connectors():
 		return (
 			Connector(ConnectionType.PROPAGATE, self, True, name='input'),
 			Connector(ConnectionType.PROPAGATE, self, False, name='output')
@@ -85,7 +90,6 @@ class VisualSnippet(BoxLayout):
 	def on_touch_move(self, touch):
 		if touch.button == MOVE_BUTTON:
 			if touch.grab_current is self:
-				#print(touch.dx, touch.dy)
 				self.pos = self.pos[0] + touch.dx, self.pos[1] + touch.dy
 				return True
 		
@@ -112,44 +116,31 @@ class StartSnippet(VisualSnippet):
 		  Connector(ConnectionType.PROPAGATE, self, False, name='output'),
 		  )
 
-
-
-class GetInputSnippet(VisualSnippet):
+class SimpleSnippetGen():
 	@staticmethod
-	def get_snippet_name():
-		return "Get Input"
-	
-	
-	def get_connectors(self):
-		return (
-		  Connector(ConnectionType.PROPAGATE, self, True, name='input'),
-		  Connector(ConnectionType.PROPAGATE, self, False, name='output'),
-		  Connector(ConnectionType.BOOL, self, False, name="value"),
-		  )
-
-
-
-class SetOutputSnippet(VisualSnippet):
+	def make(name, connector_data):
+		class SimpleSnippet(VisualSnippet):
+			@staticmethod
+			def get_snippet_name():
+				return name
+			
+			def get_connectors(self):
+				return [Connector(ConnectionType[conn_spec["type"]], self, conn_spec["input"]=="true", name=conn_spec["name"]) for conn_spec in connector_data]
+		return SimpleSnippet
 	@staticmethod
-	def get_snippet_name():
-		return "Set Output"
-	
-	
-	def get_connectors(self):
-		return (
-		  Connector(ConnectionType.PROPAGATE, self, True, name='input'),
-		  Connector(ConnectionType.BOOL, self, True, name="value"),
-		  Connector(ConnectionType.PROPAGATE, self, False, name='output'),
-		  )
+	def init():
+		from json import load
+		with open("snippets.json", "r") as f:
+			for snp in load(f):
+				if "name" in snp and "connections" in snp:
+					snippet = SimpleSnippetGen.make(snp["name"], snp["connections"])
+					Logger.info("visual: registered snippet '%s'" % snp["name"])
+					snippets.append(snippet)
 
+class VariableIn(VisualSnippet):
+	pass
 
-
-#snippets.append(VisualSnippet)
 snippets.append(StartSnippet)
-snippets.append(GetInputSnippet)
-snippets.append(SetOutputSnippet)
-
-
 
 class VisualEditor(FloatLayout):
 	grid_lay			= ObjectProperty(None)
@@ -169,20 +160,19 @@ class VisualEditor(FloatLayout):
 		self.line_group = InstructionGroup()
 		self.canvas.add(self.line_group)
 	
+	def get_state(self):
+		return (connections, self.snippet_area.children)
 	
 	def update(self, dt):
 		if len(self.connections)>0:
 			self.line_group.clear()
 			for conn in self.connections:
-				self.line_group.add(Color(*conn.get_color()))
+				#self.line_group.add(Color(*conn.get_color()))           #TODO
 				self.line_group.add(Line(points=(conn.input.get_pos()+conn.output.get_pos()), width=1))
 		else:
 			self.line_group.clear()
 					
 			
-		
-	
-	
 	def try_to_make_connection(self):
 		if self.connection_starter and self.connection_ender and \
 		self.connection_starter.conn_type == self.connection_ender.conn_type and \
@@ -215,7 +205,6 @@ class VisualEditor(FloatLayout):
 					break
 			else:
 				if touch.is_mouse_scrolling:
-					#print("Scrolling")
 					for child in self.snippet_area.children:
 						tv = qvec.VecNd(tuple(child.pos)) - qvec.VecNd(tuple(touch.pos))
 						tv *= mult
@@ -243,7 +232,6 @@ class VisualEditor(FloatLayout):
 		
 		if touch.button == MOVE_BUTTON:
 			if touch.grab_current is self:
-				#print(touch.dx, touch.dy)
 				for child in self.snippet_area.children:
 					child.pos[0] += touch.dx
 					child.pos[1] += touch.dy
@@ -299,3 +287,8 @@ class VisualEditor(FloatLayout):
 		snippet.invalidate()
 		self.snippet_area.remove_widget(snippet)
 		self.update_connections()
+
+
+
+SimpleSnippetGen.init()
+

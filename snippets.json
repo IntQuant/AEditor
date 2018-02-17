@@ -1,0 +1,26 @@
+[
+{"name":"GetInput","connections":[
+{"input":"true", "type":"PROPAGATE", "name":"input"},
+{"input":"false", "type":"PROPAGATE", "name":"output"},
+{"input":"false", "type":"BOOL", "name":"value"}
+]},
+{"name":"SetOutput","connections":[
+{"input":"true", "type":"PROPAGATE", "name":"input"},
+{"input":"true", "type":"BOOL", "name":"value"},
+{"input":"false", "type":"PROPAGATE", "name":"output"}
+]},
+{"name":"Delay","connections":[
+{"input":"true", "type":"PROPAGATE", "name":"input"},
+{"input":"false", "type":"PROPAGATE", "name":"output"}
+]},
+{"name":"True","connections":[
+{"input":"true", "type":"PROPAGATE", "name":"input"},
+{"input":"false", "type":"BOOL", "name":"value"},
+{"input":"false", "type":"PROPAGATE", "name":"output"}
+]},
+{"name":"False","connections":[
+{"input":"true", "type":"PROPAGATE", "name":"input"},
+{"input":"false", "type":"BOOL", "name":"value"},
+{"input":"false", "type":"PROPAGATE", "name":"output"}
+]}
+]
