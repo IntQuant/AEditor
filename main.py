@@ -8,8 +8,7 @@ from kivy.clock 		import Clock
 from kivy.logger 		import Logger
 from kivy.properties	import ObjectProperty
 
-from editor_visual 		import VisualEditor
-from codegen 			import generate
+from editor_visual 		import VisualEditor, set_app
 
 class MainWidget(Widget):
 	def init_all(self):
@@ -31,6 +30,10 @@ class AEditorApp(App):
 		MW.init_all()
 		return MW
 	def generate(self):
-		generate()
+		if self.editor:
+			self.editor.generate()
 
-AEditorApp().run()
+if __name__ == "__main__":
+	app = AEditorApp()
+	set_app(app)
+	app.run()

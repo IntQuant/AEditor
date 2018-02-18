@@ -7,7 +7,8 @@ from kivy.app 					import App
 from kivy.uix.floatlayout		import FloatLayout
 from kivy.uix.boxlayout			import BoxLayout
 from kivy.uix.button			import Button
-from kivy.properties			import ObjectProperty, ListProperty, BooleanProperty
+from kivy.properties			import ObjectProperty, ListProperty, \
+									   BooleanProperty, StringProperty
 from kivy.clock 				import Clock
 from kivy.core.window 			import Window
 from kivy.graphics 				import Color, Line, InstructionGroup
@@ -17,14 +18,24 @@ from kivy.uix.textinput 		import TextInput
 from QLibs 						import qvec
 
 from connections 				import Connection, ConnectionType, Connector
-
-from random						import getrandbits
+from codegen 					import generate
 
 MOVE_BUTTON = "right"
 
 snippets = []
 
+app = None
+next_uuid = -1
 
+def get_next_uuid():
+	global next_uuid
+	next_uuid += 1
+	return (hex(next_uuid-1)[2:]).rjust(16, '0')
+
+
+def set_app(p_app):
+	global app
+	app = p_app
 
 class VisualSnippet(BoxLayout):
 	
@@ -35,6 +46,9 @@ class VisualSnippet(BoxLayout):
 	
 	def invalidate(self):
 		self.valid = False
+	
+	def handle_codegen(self, connections, snippets):
+		return ""
 	
 	def connector_factory(self, connector):
 		bt = Button(text=connector.name)
@@ -53,11 +67,11 @@ class VisualSnippet(BoxLayout):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		Clock.schedule_once(self.on_next_sched)
-		self.uuid = getrandbits(512)
+		self.uuid = get_next_uuid()
 	
 		
 	def get_state(self):
-		return ()
+		return {}
 	
 	
 	def on_next_sched(self, dt):
@@ -141,7 +155,16 @@ class SetVariable(VisualSnippet):
 	@staticmethod
 	def get_snippet_name():
 		return "SetVariable"
-	
+
+	def text_input_factory(self):
+		def cb(text):
+			self.var_name = "usr_" + text.text
+		
+		ti = TextInput(multiline=False, size_hint_y=None, height=30, on_text_validate=cb)
+		return ti
+
+	def get_state(self):
+		return {"var_name":self.var_name}
 	
 	def get_connectors(self):
 		return (
@@ -150,25 +173,36 @@ class SetVariable(VisualSnippet):
 	
 	def on_next_sched(self, dt):
 		if self.conn_area:
-			self.conn_area.add_widget(TextInput(multiline=False, size_hint_y=None, height=30))
+			self.conn_area.add_widget(self.text_input_factory())
 		super().on_next_sched(dt)
 
 
 
 class GetVariable(VisualSnippet):
+	var_name = StringProperty()
 	@staticmethod
 	def get_snippet_name():
 		return "GetVariable"
 	
+	def get_state(self):
+		return {"var_name":self.var_name}
 	
 	def get_connectors(self):
 		return (
 			Connector(ConnectionType.INT, self, False, name="value"),
 		)
 	
+	def text_input_factory(self):
+		def cb(text):
+			self.var_name = "usr_" + text.text
+		
+		ti = TextInput(multiline=False, size_hint_y=None, height=30, on_text_validate=cb)
+		return ti
+		
+	
 	def on_next_sched(self, dt):
 		if self.conn_area:
-			self.conn_area.add_widget(TextInput(multiline=False, size_hint_y=None, height=30))
+			self.conn_area.add_widget(self.text_input_factory())
 		super().on_next_sched(dt)
 
 
@@ -185,6 +219,8 @@ class VisualEditor(FloatLayout):
 
 	
 	def __init__(self, **kwargs):
+		global app
+		
 		Clock.schedule_once(self.init_grid_lay, 1)
 		Clock.schedule_interval(self.update, 1/20)
 		super(VisualEditor, self).__init__(**kwargs)
@@ -193,11 +229,13 @@ class VisualEditor(FloatLayout):
 		self.connection_starter	= None
 		self.connection_ender	= None
 		
+		app.editor = self
+		
 		self.line_group = InstructionGroup()
 		self.canvas.add(self.line_group)
 	
 	def get_state(self):
-		return (connections, self.snippet_area.children)
+		return (self.connections, self.snippet_area.children)
 	
 	def update(self, dt):
 		if len(self.connections)>0:
@@ -324,7 +362,8 @@ class VisualEditor(FloatLayout):
 		self.snippet_area.remove_widget(snippet)
 		self.update_connections()
 
-
+	def generate(self):
+		generate(self.get_state())
 
 SimpleSnippetGen.init()
 

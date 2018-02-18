@@ -26,9 +26,7 @@
 			text: root.get_snippet_name()
 			size_hint_y: None
 			height: 20
-			on_press: root.editor.remove_snippet(root)
-		
-			
+			on_press: root.editor.remove_snippet(root)			
 
 <VisualEditor>:
 	grid_lay: box_lay
@@ -98,9 +96,10 @@
 					size_hint_x: 0.3333
 					size_hint_y: 0.5
 				Button:
-					text: get("Run")
+					text: get("Upload")
 					size_hint_x: 0.3333
 					size_hint_y: 0.5
+					on_press: app.generate()
 			Button:
 				text: ""
 				size_hint_x: 0.1
