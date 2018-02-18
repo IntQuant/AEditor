@@ -12,6 +12,7 @@ from kivy.clock 				import Clock
 from kivy.core.window 			import Window
 from kivy.graphics 				import Color, Line, InstructionGroup
 from kivy.logger 				import Logger
+from kivy.uix.textinput 		import TextInput
 
 from QLibs 						import qvec
 
@@ -71,8 +72,7 @@ class VisualSnippet(BoxLayout):
 		return "None"
 	
 	
-	@staticmethod
-	def get_connectors():
+	def get_connectors(self):
 		return (
 			Connector(ConnectionType.PROPAGATE, self, True, name='input'),
 			Connector(ConnectionType.PROPAGATE, self, False, name='output')
@@ -137,10 +137,46 @@ class SimpleSnippetGen():
 					Logger.info("visual: registered snippet '%s'" % snp["name"])
 					snippets.append(snippet)
 
-class VariableIn(VisualSnippet):
-	pass
+class SetVariable(VisualSnippet):
+	@staticmethod
+	def get_snippet_name():
+		return "SetVariable"
+	
+	
+	def get_connectors(self):
+		return (
+			Connector(ConnectionType.INT, self, True, name="value"),
+		) + super().get_connectors()
+	
+	def on_next_sched(self, dt):
+		if self.conn_area:
+			self.conn_area.add_widget(TextInput(multiline=False, size_hint_y=None, height=30))
+		super().on_next_sched(dt)
+
+
+
+class GetVariable(VisualSnippet):
+	@staticmethod
+	def get_snippet_name():
+		return "GetVariable"
+	
+	
+	def get_connectors(self):
+		return (
+			Connector(ConnectionType.INT, self, False, name="value"),
+		)
+	
+	def on_next_sched(self, dt):
+		if self.conn_area:
+			self.conn_area.add_widget(TextInput(multiline=False, size_hint_y=None, height=30))
+		super().on_next_sched(dt)
+
+
+
 
 snippets.append(StartSnippet)
+snippets.append(SetVariable)
+snippets.append(GetVariable)
 
 class VisualEditor(FloatLayout):
 	grid_lay			= ObjectProperty(None)
@@ -254,7 +290,7 @@ class VisualEditor(FloatLayout):
 			snp.editor = self
 			self.snippet_area.add_widget(snp)
 			snp.pos=(self.snippet_area.height / 2, self.snippet_area.width / 2)
-		b = Button(size_hint_y=None, height=100, text=snippet.get_snippet_name())
+		b = Button(size_hint_y=None, height=40, text=snippet.get_snippet_name())
 		b.bind(on_press=f)
 		return b
 	
