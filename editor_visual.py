@@ -37,18 +37,24 @@ def set_app(p_app):
 	global app
 	app = p_app
 
+
+def get_var_name_by_connector(connector):
+	return "dev_" + connector.parent.uuid + "_" + connector.name
+
+def get_var_name(uuid, name):
+	return "dev_" + uuid + "_" + name
+
 class VisualSnippet(BoxLayout):
 	
 	conn_area 	= ObjectProperty(None)
 	editor 		= ObjectProperty(None)
 	valid 		= BooleanProperty(True)
 	
-	
 	def invalidate(self):
 		self.valid = False
 	
 	def handle_codegen(self, connections, snippets):
-		return ""
+		return """/*NO GENERATED CODE FROM %s*/\n""" % self.get_snippet_name()
 	
 	def connector_factory(self, connector):
 		bt = Button(text=connector.name)
@@ -139,20 +145,23 @@ class StartSnippet(VisualSnippet):
 		while prv!=csnp:
 			csnp_all = []
 			for conn in connections:
-				#print(conn.output.parent)
 				if conn.output.parent is csnp:
 					print(conn.input.parent)
 					csnp_all.append(conn.input.parent)
 			stack += csnp_all
-			print(csnp_all)
+			
 			prv = csnp
 			if len(stack)>0:
 				csnp = stack.pop()
+				code_pieces.append(csnp.handle_codegen(connections, snippets))
+		
+		return code_pieces	
+			
 			
 
 class SimpleSnippetGen():
 	@staticmethod
-	def make(name, connector_data):
+	def make(name, connector_data, codegen):
 		class SimpleSnippet(VisualSnippet):
 			@staticmethod
 			def get_snippet_name():
@@ -160,6 +169,15 @@ class SimpleSnippetGen():
 			
 			def get_connectors(self):
 				return [Connector(ConnectionType[conn_spec["type"]], self, conn_spec["input"]=="true", name=conn_spec["name"]) for conn_spec in connector_data]
+			
+			def handle_codegen(self, connections, snippets): #TODO
+				if codegen:
+					connectors = self.get_connectors()
+					names = map(lambda x:x.name, connectors)
+					varname = map(get_var_name_by_connector, connectors)
+					return codegen.format(**dict(zip(names, varname)))
+				else:
+					return super().handle_codegen(connections, snippets)
 		return SimpleSnippet
 	@staticmethod
 	def init():
@@ -167,7 +185,7 @@ class SimpleSnippetGen():
 		with open("snippets.json", "r") as f:
 			for snp in load(f):
 				if "name" in snp and "connections" in snp:
-					snippet = SimpleSnippetGen.make(snp["name"], snp["connections"])
+					snippet = SimpleSnippetGen.make(snp["name"], snp["connections"], snp["codegen"] if "codegen" in snp else None)
 					Logger.info("visual: registered snippet '%s'" % snp["name"])
 					snippets.append(snippet)
 
@@ -183,6 +201,11 @@ class SetVariable(VisualSnippet):
 		ti = TextInput(multiline=False, size_hint_y=None, height=30, on_text_validate=cb)
 		return ti
 
+	def on_next_sched(self, dt):
+		if self.conn_area:
+			self.conn_area.add_widget(self.text_input_factory())
+		super().on_next_sched(dt)
+
 	def get_state(self):
 		return {"var_name":self.var_name}
 	
@@ -191,10 +214,10 @@ class SetVariable(VisualSnippet):
 			Connector(ConnectionType.INT, self, True, name="value"),
 		) + super().get_connectors()
 	
-	def on_next_sched(self, dt):
-		if self.conn_area:
-			self.conn_area.add_widget(self.text_input_factory())
-		super().on_next_sched(dt)
+	#def handle_codegen(self, connections, snippets):
+		
+	
+
 
 
 
