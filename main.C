@@ -1,25 +1,16 @@
-/* port_test.c
- * The following program just  keeps toggling pin 0 of port B
- */
+#include <avr/io.h>
 
-#include <avr/io.h> //standard include for ATMega16
-#define sbi(x,y) x |= _BV(y) //set bit - using bitwise OR operator 
-#define cbi(x,y) x &= ~(_BV(y)) //clear bit - using bitwise AND operator
-#define tbi(x,y) x ^= _BV(y) //toggle bit - using bitwise XOR operator
-#define is_high(x,y) (x & _BV(y) == _BV(y)) //check if the y'th bit of register 'x' is high ... test if its AND with 1 is 1
-
-/* _BV(a) is a macro which returns the value corresponding to 2 to the power 'a'. Thus _BV(PX3) would be 0x08 or 0b00001000 */
+#define XTAL        16000000L //Crystal Freq.
+#define TIMER_CLOCK     2       // Toggling Freq.
 
 int main(void)
 {
-    DDRB=0xff; //PORTB as OUTPUT
-    PORTB=0x00; //All pins of PORTB LOW
-
-    unsigned int i;
-    while(1==1) //Infinite loop
-    {
-        for(i=0;i<65535;i++); //delay
-        for(i=0;i<65535;i++); //delay
-        tbi(PORTB,PB0);   //here the toggling takes place
-    }
+    DDRD = _BV(PD5); // set OC1A pin as output, required for output 
+    TCCR1A = _BV(COM1A0); // enable toggle OC1A output on compare 
+    TCCR1B = _BV(CS10) | _BV(CS11)  | _BV(WGM12); // prescaler=64, clear timer/counter on compareA match                
+    OCR1A = ((XTAL/64)/(2*TIMER_CLOCK)) - 1; // preset timer1 high/low byte
+    /*
+     * Initialisation done, LED will now flash without executing any code !
+     */
+    for(;;){}    // loop forever
 }

@@ -18,9 +18,9 @@ class ConnectionInfo():
 
 
 class ConnectionType(Enum):
-	PROPAGATE 	= ConnectionInfo((1, 1, 1, 0.5))
-	INT 		= ConnectionInfo((0.1, 0.5, 1, 0.5))
-	BOOL 		= ConnectionInfo((0.5, 0.7, 0.5, 0.5))
+	PROPAGATE 	= ConnectionInfo((1, 1, 1, 1))
+	INT 		= ConnectionInfo((0.1, 0.5, 1, 1))
+	BOOL 		= ConnectionInfo((0.5, 0.7, 0.5, 1))
 
 
 
@@ -28,13 +28,12 @@ class Connection():
 	def __init__(self, inp, out, conn_type):
 		self.input = inp
 		self.output =out
-		self.conn_type = conn_type
+		self.conn_type = self.input.conn_type
 		self.valid = True
 	
 	
 	def get_color(self):
-		print(self.conn_type)
-		return self.conn_type.color
+		return self.conn_type.value.color
 
 
 

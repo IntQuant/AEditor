@@ -129,6 +129,26 @@ class StartSnippet(VisualSnippet):
 		return (
 		  Connector(ConnectionType.PROPAGATE, self, False, name='output'),
 		  )
+	
+	def handle_codegen(self, connections, snippets):
+		print(connections)
+		code_pieces = []
+		stack = []
+		prv = None
+		csnp = self
+		while prv!=csnp:
+			csnp_all = []
+			for conn in connections:
+				#print(conn.output.parent)
+				if conn.output.parent is csnp:
+					print(conn.input.parent)
+					csnp_all.append(conn.input.parent)
+			stack += csnp_all
+			print(csnp_all)
+			prv = csnp
+			if len(stack)>0:
+				csnp = stack.pop()
+			
 
 class SimpleSnippetGen():
 	@staticmethod
@@ -241,7 +261,7 @@ class VisualEditor(FloatLayout):
 		if len(self.connections)>0:
 			self.line_group.clear()
 			for conn in self.connections:
-				#self.line_group.add(Color(*conn.get_color()))           #TODO
+				self.line_group.add(Color(*conn.get_color()))           #TODO
 				self.line_group.add(Line(points=(conn.input.get_pos()+conn.output.get_pos()), width=1))
 		else:
 			self.line_group.clear()
