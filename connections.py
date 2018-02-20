@@ -39,6 +39,7 @@ class Connection():
 
 class Connector():
 	def __init__(self, conn_type, parent, is_inp, name=""):
+		#print("Created connector", self, "with", conn_type, parent, is_inp, name)
 		self.conn_type = conn_type
 		self.parent = parent
 		self.is_inp = is_inp

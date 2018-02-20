@@ -17,7 +17,9 @@ def gen(state):
 	Logger.info("Staring code generation")
 	Logger.info("Starting translation")
 	code_pieces = []
-	code_pieces.append("""#include <avr/io.h>""")
+	#code_pieces.append("""#include <avr/io.h>""")
+	with open("headers.C", 'r') as f:
+		code_pieces.append(f.readlines())
 	code_pieces.append("""int main(void) { """)
 	connections, snippets = map(list, state)
 	for snp in snippets:

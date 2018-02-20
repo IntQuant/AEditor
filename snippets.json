@@ -10,20 +10,20 @@
 {"input":"true", "type":"BOOL", "name":"value"},
 {"input":"true", "type":"INT", "name":"pin"},
 {"input":"false", "type":"PROPAGATE", "name":"output"}
-]},
+],"codegen":"set_pin({pin}, {value})"},
 {"name":"Delay","connections":[
 {"input":"true", "type":"PROPAGATE", "name":"input"},
 {"input":"false", "type":"PROPAGATE", "name":"output"}
 ]},
-{"name":"True","connections":[
+{"name":"ValueTrue","connections":[
 {"input":"true", "type":"PROPAGATE", "name":"input"},
 {"input":"false", "type":"BOOL", "name":"value"},
 {"input":"false", "type":"PROPAGATE", "name":"output"}
-],"codegen":"{value} = true;"
+],"codegen":"bool {value} = true;"
 },
-{"name":"False","connections":[
+{"name":"ValueFalse","connections":[
 {"input":"true", "type":"PROPAGATE", "name":"input"},
 {"input":"false", "type":"BOOL", "name":"value"},
 {"input":"false", "type":"PROPAGATE", "name":"output"}
-],"codegen":"{value} = false;"}
+],"codegen":"bool {value} = false;"}
 ]

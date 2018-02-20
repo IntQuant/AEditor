@@ -8,7 +8,8 @@ from kivy.uix.floatlayout		import FloatLayout
 from kivy.uix.boxlayout			import BoxLayout
 from kivy.uix.button			import Button
 from kivy.properties			import ObjectProperty, ListProperty, \
-									   BooleanProperty, StringProperty
+									   BooleanProperty, StringProperty, \
+									   NumericProperty
 from kivy.clock 				import Clock
 from kivy.core.window 			import Window
 from kivy.graphics 				import Color, Line, InstructionGroup
@@ -137,7 +138,6 @@ class StartSnippet(VisualSnippet):
 		  )
 	
 	def handle_codegen(self, connections, snippets):
-		print(connections)
 		code_pieces = []
 		stack = []
 		prv = None
@@ -145,8 +145,7 @@ class StartSnippet(VisualSnippet):
 		while prv!=csnp:
 			csnp_all = []
 			for conn in connections:
-				if conn.output.parent is csnp:
-					print(conn.input.parent)
+				if conn.output.parent is csnp and conn.conn_type == ConnectionType.PROPAGATE:
 					csnp_all.append(conn.input.parent)
 			stack += csnp_all
 			
@@ -161,21 +160,39 @@ class StartSnippet(VisualSnippet):
 
 class SimpleSnippetGen():
 	@staticmethod
-	def make(name, connector_data, codegen):
+	def make(name, cd, codegen):
 		class SimpleSnippet(VisualSnippet):
+			def __init__(self, **kwargs):
+				super().__init__(**kwargs)
+				self.connector_data = cd
+				self.connectors = None
+			
 			@staticmethod
 			def get_snippet_name():
 				return name
 			
 			def get_connectors(self):
-				return [Connector(ConnectionType[conn_spec["type"]], self, conn_spec["input"]=="true", name=conn_spec["name"]) for conn_spec in connector_data]
+				if self.connectors:
+					return self.connectors
+				else:
+					self.connectors = [Connector(ConnectionType[conn_spec["type"]], self, is_inp=conn_spec['input']=="true", name=conn_spec["name"]) for conn_spec in self.connector_data]
+					return self.connectors
 			
-			def handle_codegen(self, connections, snippets): #TODO
+			def handle_codegen(self, connections, snippets):
 				if codegen:
 					connectors = self.get_connectors()
-					names = map(lambda x:x.name, connectors)
-					varname = map(get_var_name_by_connector, connectors)
-					return codegen.format(**dict(zip(names, varname)))
+					frm = {}
+					print(len(connectors))
+					for conn in connectors:
+						#print(conn.name, conn.is_inp)
+						if conn.is_inp:
+							for connection in connections:
+								if connection.output is conn:
+									frm[conn.name] = (get_var_name_by_connector(connection.input))
+									break
+						else:
+							frm[conn.name]	= get_var_name_by_connector(conn)
+					return codegen.format(**frm)
 				else:
 					return super().handle_codegen(connections, snippets)
 		return SimpleSnippet
@@ -213,13 +230,8 @@ class SetVariable(VisualSnippet):
 		return (
 			Connector(ConnectionType.INT, self, True, name="value"),
 		) + super().get_connectors()
-	
-	#def handle_codegen(self, connections, snippets):
 		
-	
-
-
-
+		
 
 class GetVariable(VisualSnippet):
 	var_name = StringProperty()
@@ -233,7 +245,7 @@ class GetVariable(VisualSnippet):
 	def get_connectors(self):
 		return (
 			Connector(ConnectionType.INT, self, False, name="value"),
-		)
+		) + super().get_connectors()
 	
 	def text_input_factory(self):
 		def cb(text):
@@ -250,10 +262,47 @@ class GetVariable(VisualSnippet):
 
 
 
+class IntInput(TextInput):
+	def insert_text(self, pat, from_undo=False):
+		s = "".join([ch for ch in pat if ch.isalnum() if int(ch) in range(10)])
+		return super(IntInput, self).insert_text(s, from_undo=from_undo)
+	def on_enter(self):
+		self.text = str(int(self.text))
+
+
+
+class IntValue(VisualSnippet):
+	value = NumericProperty(0)
+	@staticmethod
+	def get_snippet_name():
+		return "ValueInt"
+	
+	def get_connectors(self):
+		return (
+			Connector(ConnectionType.INT, self, False, name="value"),
+		) + super().get_connectors()
+	
+	def handle_codegen(self, connections, snippets):
+		return "int %s = %s;" % (get_var_name(self.uuid, "value"), self.value)
+	
+	def text_input_factory(self):
+		def cb(text):
+			self.value = int(text.text)
+		
+		ti = IntInput(multiline=False, size_hint_y=None, height=30, on_text_validate=cb, text="0")
+		return ti
+		
+	
+	def on_next_sched(self, dt):
+		if self.conn_area:
+			self.conn_area.add_widget(self.text_input_factory())
+		super().on_next_sched(dt)
+
 
 snippets.append(StartSnippet)
 snippets.append(SetVariable)
 snippets.append(GetVariable)
+snippets.append(IntValue)
 
 class VisualEditor(FloatLayout):
 	grid_lay			= ObjectProperty(None)
