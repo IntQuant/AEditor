@@ -142,6 +142,9 @@ class StartSnippet(VisualSnippet):
 		stack = []
 		prv = None
 		csnp = self
+		for conn in connections:
+			print(conn.input.name, conn.input.is_inp, conn.output.name, conn.output.is_inp)
+		
 		while prv!=csnp:
 			csnp_all = []
 			for conn in connections:
@@ -179,22 +182,26 @@ class SimpleSnippetGen():
 					return self.connectors
 			
 			def handle_codegen(self, connections, snippets):
-				if codegen:
-					connectors = self.get_connectors()
-					frm = {}
-					print(len(connectors))
-					for conn in connectors:
-						#print(conn.name, conn.is_inp)
-						if conn.is_inp:
-							for connection in connections:
-								if connection.output is conn:
-									frm[conn.name] = (get_var_name_by_connector(connection.input))
-									break
-						else:
-							frm[conn.name]	= get_var_name_by_connector(conn)
-					return codegen.format(**frm)
-				else:
-					return super().handle_codegen(connections, snippets)
+				try:
+					if codegen:
+						connectors = self.get_connectors()
+						frm = {}
+						print(len(connectors))
+						for conn in connectors:
+							#print(conn.name, conn.is_inp)
+							if conn.is_inp:
+								for connection in connections:
+									if connection.input is conn:
+										frm[conn.name] = (get_var_name_by_connector(connection.output))
+										break
+							else:
+								frm[conn.name]	= get_var_name_by_connector(conn)
+						return codegen.format(**frm)
+					else:
+						return super().handle_codegen(connections, snippets)
+				except Exception as e:
+					print("Exception encoutered while handling codegen of %s" % name)
+					raise e
 		return SimpleSnippet
 	@staticmethod
 	def init():

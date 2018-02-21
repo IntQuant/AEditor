@@ -19,7 +19,7 @@ def gen(state):
 	code_pieces = []
 	#code_pieces.append("""#include <avr/io.h>""")
 	with open("headers.C", 'r') as f:
-		code_pieces.append(f.readlines())
+		code_pieces.append(f.read())
 	code_pieces.append("""int main(void) { """)
 	connections, snippets = map(list, state)
 	for snp in snippets:
