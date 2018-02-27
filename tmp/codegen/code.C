@@ -10,27 +10,14 @@ void set_pin_mode(int ind, bool value) {
 	//if (tv==0) {
 	//	sbi(DDRA, ind-(tv * 8));
 	//}
-	if (value) {
-		if (tv==1) {
-			sbi(DDRB, ind-(tv * 8));
-		}
-		if (tv==2) {
-			sbi(DDRC, ind-(tv * 8));
-		}
-		if (tv==3) {
-			sbi(DDRD, ind-(tv * 8));
-		}
+	if (tv==1) {
+		sbi(DDRB, ind-(tv * 8));
 	}
-	else {
-		if (tv==1) {
-			cbi(DDRB, ind-(tv * 8));
-		}
-		if (tv==2) {
-			cbi(DDRC, ind-(tv * 8));
-		}
-		if (tv==3) {
-			cbi(DDRD, ind-(tv * 8));
-		}
+	if (tv==2) {
+		sbi(DDRC, ind-(tv * 8));
+	}
+	if (tv==3) {
+		sbi(DDRD, ind-(tv * 8));
 	}
 }
 
@@ -48,4 +35,7 @@ void set_pin(int ind, bool value) {
 	if (tv==3) {
 		sbi(PORTD, ind-(tv * 8));
 	}
+}
+
+int main(void) { 
 }

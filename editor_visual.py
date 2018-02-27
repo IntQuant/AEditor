@@ -295,6 +295,7 @@ class IntValue(VisualSnippet):
 	def text_input_factory(self):
 		def cb(text):
 			self.value = int(text.text)
+			print(self.value)
 		
 		ti = IntInput(multiline=False, size_hint_y=None, height=30, on_text_validate=cb, text="0")
 		return ti

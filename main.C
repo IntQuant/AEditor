@@ -20,6 +20,6 @@ int main(void)
     {
         for(i=0;i<65535;i++); //delay
         for(i=0;i<65535;i++); //delay
-        tbi(PORTB,PB0);   //here the toggling takes place
+        tbi(PORTB, 0);   //here the toggling takes place
     }
 }

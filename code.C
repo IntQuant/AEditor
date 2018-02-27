@@ -49,3 +49,11 @@ void set_pin(int ind, bool value) {
 		sbi(PORTD, ind-(tv * 8));
 	}
 }
+
+int main(void) { 
+int dev_0000000000000000_value = 10;
+bool dev_0000000000000002_value = true;
+set_pin_mode(dev_0000000000000000_value, dev_0000000000000002_value);
+set_pin(dev_0000000000000000_value, dev_0000000000000002_value);
+for (;;) {}
+}
