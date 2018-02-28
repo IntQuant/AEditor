@@ -1,4 +1,7 @@
 #include <avr/io.h> //standard include for ATMega16
+#include <util/delay.h>
+
+#define F_CPU 20000000;
 
 #define sbi(x,y) x |= _BV(y) //set bit - using bitwise OR operator 
 #define cbi(x,y) x &= ~(_BV(y)) //clear bit - using bitwise AND operator
@@ -7,10 +10,10 @@
 
 void set_pin_mode(int ind, bool value) {
 	int tv = ind / 8;
-	//if (tv==0) {
-	//	sbi(DDRA, ind-(tv * 8));
-	//}
 	if (value) {
+//		if (tv==0) {
+//			sbi(DDRA, ind-(tv * 8));
+//		}
 		if (tv==1) {
 			sbi(DDRB, ind-(tv * 8));
 		}
@@ -22,6 +25,9 @@ void set_pin_mode(int ind, bool value) {
 		}
 	}
 	else {
+//		if (tv==0) {
+//			cbi(DDRA, ind-(tv * 8));
+//		}
 		if (tv==1) {
 			cbi(DDRB, ind-(tv * 8));
 		}
@@ -36,16 +42,31 @@ void set_pin_mode(int ind, bool value) {
 
 void set_pin(int ind, bool value) {
 	int tv = ind / 8;
-	//if (tv==0) {
-	//	sbi(PORTA, ind-(tv * 8));
-	//}
-	if (tv==1) {
-		sbi(PORTB, ind-(tv * 8));
-	}
-	if (tv==2) {
-		sbi(PORTC, ind-(tv * 8));
-	}
-	if (tv==3) {
-		sbi(PORTD, ind-(tv * 8));
+	if (value) {
+//		if (tv==0) {
+//			sbi(PORTA, ind-(tv * 8));
+//		}
+		if (tv==1) {
+			sbi(PORTB, ind-(tv * 8));
+		}
+		if (tv==2) {
+			sbi(PORTC, ind-(tv * 8));
+		}
+		if (tv==3) {
+			sbi(PORTD, ind-(tv * 8));
+		}
+	} else {
+//		if (tv==0) {
+//			cbi(PORTA, ind-(tv * 8));
+//		}
+		if (tv==1) {
+			cbi(PORTB, ind-(tv * 8));
+		}
+		if (tv==2) {
+			cbi(PORTC, ind-(tv * 8));
+		}
+		if (tv==3) {
+			cbi(PORTD, ind-(tv * 8));
+		}
 	}
 }

@@ -45,6 +45,36 @@ def get_var_name_by_connector(connector):
 def get_var_name(uuid, name):
 	return "dev_" + uuid + "_" + name
 
+def get_connected_var(conn, connections):
+	for connection in connections:
+		if connection.input is conn:
+			return get_var_name_by_connector(connection.output)
+			
+
+
+def walk_connections(self, connections, snippets, name):
+	code_pieces = []
+	stack = []
+	prv = None
+	csnp = self
+	
+	while prv!=csnp:
+		csnp_all = []
+		for conn in connections:
+			if conn.output.parent is csnp and conn.conn_type == ConnectionType.PROPAGATE:
+				print(self, conn.output.name)
+				if conn.output.name == "output" or (conn.output.parent is self and conn.output.name == name):
+					csnp_all.append(conn.input.parent)
+		stack += csnp_all
+		
+		prv = csnp
+		if len(stack)>0:
+			csnp = stack.pop()
+			code_pieces.append(csnp.handle_codegen(connections, snippets))
+	
+	return code_pieces
+
+
 class VisualSnippet(BoxLayout):
 	
 	conn_area 	= ObjectProperty(None)
@@ -138,7 +168,7 @@ class StartSnippet(VisualSnippet):
 		  )
 	
 	def handle_codegen(self, connections, snippets):
-		code_pieces = []
+		'''code_pieces = []
 		stack = []
 		prv = None
 		csnp = self
@@ -156,8 +186,9 @@ class StartSnippet(VisualSnippet):
 			if len(stack)>0:
 				csnp = stack.pop()
 				code_pieces.append(csnp.handle_codegen(connections, snippets))
+		'''
 		
-		return code_pieces	
+		return walk_connections(self, connections, snippets, "output")
 			
 			
 
@@ -188,7 +219,6 @@ class SimpleSnippetGen():
 						frm = {}
 						print(len(connectors))
 						for conn in connectors:
-							#print(conn.name, conn.is_inp)
 							if conn.is_inp:
 								for connection in connections:
 									if connection.input is conn:
@@ -307,10 +337,66 @@ class IntValue(VisualSnippet):
 		super().on_next_sched(dt)
 
 
+
+class I2OSnippet(VisualSnippet):
+	def get_connectors(self):
+		if hasattr(self, "conns"):
+			return self.conns
+		self.conns = super().get_connectors() + \
+		(
+		 Connector(ConnectionType.PROPAGATE, self, False, name="inb"),
+		)
+		return self.conns
+	
+	def handle_trees(self, second, connections):
+		pass
+	
+	def handle_codegen(self, connections, snippets):
+		#prim = walk_connections(self, connections, snippets, "output")
+		sec = walk_connections(self, connections, snippets, "inb")
+		return self.handle_trees(sec, connections)
+
+
+
+class IfSnippet(I2OSnippet):
+	@staticmethod
+	def get_snippet_name():
+		return "branch"
+	def get_connectors(self):
+		if hasattr(self, "conns"):
+			return self.conns
+		self.conns = super().get_connectors() + \
+		(
+		 Connector(ConnectionType.BOOL, self, True, name="value"),
+		)
+		return self.conns
+	def handle_trees(self, r, connections):
+		code_pieces = []
+		v_name = get_connected_var(self.get_connectors()[-1], connections)
+		code_pieces.append("if (%s) {" % v_name)
+		code_pieces.append(r)
+		code_pieces.append("}")
+		return code_pieces
+
+
+
+class LoopForever(I2OSnippet):
+	@staticmethod
+	def get_snippet_name():
+		return "loop"
+	def handle_trees(self, r, connections):
+		code_pieces = []
+		code_pieces.append("while (true) {")
+		code_pieces.append(r)
+		code_pieces.append("}")
+		return code_pieces
+
 snippets.append(StartSnippet)
 snippets.append(SetVariable)
 snippets.append(GetVariable)
 snippets.append(IntValue)
+snippets.append(IfSnippet)
+snippets.append(LoopForever)
 
 class VisualEditor(FloatLayout):
 	grid_lay			= ObjectProperty(None)
@@ -467,3 +553,6 @@ class VisualEditor(FloatLayout):
 
 SimpleSnippetGen.init()
 
+snippets = [snp for snp in snippets if hasattr(snp, "get_snippet_name")]
+#snippets.sort(key = lambda x:len(x.get_snippet_name()))
+snippets.sort(key = lambda x:x.get_snippet_name())
