@@ -72,16 +72,5 @@ void set_pin(int ind, bool value) {
 }
 
 int main(void) { 
-int dev_0000000000000003_value = 9;
-bool dev_0000000000000005_value = true;
-set_pin_mode(dev_0000000000000003_value, dev_0000000000000005_value);
-int dev_0000000000000007_value = 100;
-bool dev_000000000000000e_value = false;
-while (true) {
-set_pin(dev_0000000000000003_value, dev_0000000000000005_value);
-delay_ms(dev_0000000000000007_value);
-set_pin(dev_0000000000000003_value, dev_000000000000000e_value);
-delay_ms(dev_0000000000000007_value);
-}
 for (;;) {}
 }

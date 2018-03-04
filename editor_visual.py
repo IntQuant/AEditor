@@ -39,7 +39,9 @@ def set_app(p_app):
 	app = p_app
 
 
-def get_var_name_by_connector(connector):
+def get_var_name_by_connector(connector, no_constant=False):
+	if (not no_constant) and connector.get_constant():
+		return connector.get_constant()
 	return "dev_" + connector.parent.uuid + "_" + connector.name
 
 def get_var_name(uuid, name):
@@ -86,6 +88,9 @@ class VisualSnippet(BoxLayout):
 	
 	def handle_codegen(self, connections, snippets):
 		return """/*NO GENERATED CODE FROM %s*/\n""" % self.get_snippet_name()
+	
+	def get_constant(self, name):
+		return None
 	
 	def connector_factory(self, connector):
 		bt = Button(text=connector.name)
@@ -408,7 +413,7 @@ class VisualEditor(FloatLayout):
 		global app
 		
 		Clock.schedule_once(self.init_grid_lay, 1)
-		Clock.schedule_interval(self.update, 1/20)
+		Clock.schedule_interval(self.update, 1/30)
 		super(VisualEditor, self).__init__(**kwargs)
 		Window.bind(on_motion=self.on_motion)
 		
@@ -417,20 +422,26 @@ class VisualEditor(FloatLayout):
 		
 		app.editor = self
 		
-		self.line_group = InstructionGroup()
-		self.canvas.add(self.line_group)
+		self.line_group = None
+		
+		
 	
 	def get_state(self):
 		return (self.connections, self.snippet_area.children)
 	
 	def update(self, dt):
-		if len(self.connections)>0:
-			self.line_group.clear()
-			for conn in self.connections:
-				self.line_group.add(Color(*conn.get_color()))           #TODO
-				self.line_group.add(Line(points=(conn.input.get_pos()+conn.output.get_pos()), width=1))
-		else:
-			self.line_group.clear()
+		if self.snippet_area and self.line_group is None:
+			self.line_group = InstructionGroup()
+			self.snippet_area.canvas.add(self.line_group)
+		
+		if self.line_group:
+			if len(self.connections)>0:
+				self.line_group.clear()
+				for conn in self.connections:
+					self.line_group.add(Color(*conn.get_color()))
+					self.line_group.add(Line(points=(conn.input.get_pos()+conn.output.get_pos()), width=1))
+			else:
+				self.line_group.clear()
 					
 			
 	def try_to_make_connection(self):

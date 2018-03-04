@@ -1,7 +1,9 @@
 from threading			import Thread
+from kivy.logger 		import Logger
+
 import pathlib
 import subprocess
-from kivy.logger 		import Logger
+
 
 import editor_visual
 
