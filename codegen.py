@@ -3,7 +3,7 @@ from kivy.logger 		import Logger
 
 import pathlib
 import subprocess
-
+import platform
 
 import editor_visual
 
@@ -55,7 +55,14 @@ def gen(state):
 	with open("code.C", "w") as f:
 		f.write(code)
 	
-	subprocess.run("./compile_and_upload.sh", shell=True)
+	if platform.system() == 'Linux':
+		subprocess.run("./compile_and_upload.sh", shell=True)
+	elif platform.system() == 'Windows':
+		subprocess.run("compile_and_upload.bat", shell=True)
+	else:
+		print("Unsupported")
+	
+	
 	"""
 	avrgcc = subprocess.run(["avr-gcc", "-mmcu=atmega328p", "{0}.C".format(base_path / code_file_name), "-o", "{0}.elf".format(base_path / code_file_name)], stdout=subprocess.PIPE) 
 	print(avrgcc)

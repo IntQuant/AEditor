@@ -11,64 +11,64 @@
 void set_pin_mode(int ind, bool value) {
 	int tv = ind / 8;
 	if (value) {
-//		if (tv==0) {
-//			sbi(DDRA, ind-(tv * 8));
-//		}
+		if (tv==0) {
+			sbi(DDRD, ind-(tv * 8));
+		}
 		if (tv==1) {
 			sbi(DDRB, ind-(tv * 8));
 		}
-		if (tv==2) {
+/*		if (tv==2) {
 			sbi(DDRC, ind-(tv * 8));
 		}
 		if (tv==3) {
 			sbi(DDRD, ind-(tv * 8));
 		}
-	}
+*/	}
 	else {
-//		if (tv==0) {
-//			cbi(DDRA, ind-(tv * 8));
-//		}
+		if (tv==0) {
+			cbi(DDRD, ind-(tv * 8));
+		}
 		if (tv==1) {
 			cbi(DDRB, ind-(tv * 8));
 		}
-		if (tv==2) {
+/*		if (tv==2) {
 			cbi(DDRC, ind-(tv * 8));
 		}
 		if (tv==3) {
 			cbi(DDRD, ind-(tv * 8));
 		}
-	}
+*/	}
 }
 
 void set_pin(int ind, bool value) {
 	int tv = ind / 8;
 	if (value) {
-//		if (tv==0) {
-//			sbi(PORTA, ind-(tv * 8));
-//		}
+		if (tv==0) {
+			sbi(PORTD, ind-(tv * 8));
+		}
 		if (tv==1) {
 			sbi(PORTB, ind-(tv * 8));
 		}
-		if (tv==2) {
+/*		if (tv==2) {
 			sbi(PORTC, ind-(tv * 8));
 		}
 		if (tv==3) {
 			sbi(PORTD, ind-(tv * 8));
 		}
-	} else {
-//		if (tv==0) {
-//			cbi(PORTA, ind-(tv * 8));
-//		}
+*/	} else {
+		if (tv==0) {
+			cbi(PORTD, ind-(tv * 8));
+		}
 		if (tv==1) {
 			cbi(PORTB, ind-(tv * 8));
 		}
-		if (tv==2) {
+/*		if (tv==2) {
 			cbi(PORTC, ind-(tv * 8));
 		}
 		if (tv==3) {
 			cbi(PORTD, ind-(tv * 8));
 		}
-	}
+*/	}
 }
 
 int main(void) { 
