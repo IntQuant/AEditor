@@ -36,15 +36,18 @@ class Connection():
 		return self.conn_type.value.color
 
 
-
 class Connector():
-	def __init__(self, conn_type, parent, is_inp, name=""):
+	def __init__(self, conn_type, parent, is_inp, name):
 		#print("Created connector", self, "with", conn_type, parent, is_inp, name)
 		self.conn_type = conn_type
 		self.parent = parent
 		self.is_inp = is_inp
 		self.name = name
 		self.button = None
+	
+	
+	def get_constant(self):
+		return self.parent.get_constant(self.name)
 	
 	
 	def get_pos(self):

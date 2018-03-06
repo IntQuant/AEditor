@@ -70,3 +70,7 @@ void set_pin(int ind, bool value) {
 		}
 */	}
 }
+
+int main(void) { 
+for (;;) {}
+}

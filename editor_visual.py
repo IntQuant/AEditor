@@ -39,11 +39,43 @@ def set_app(p_app):
 	app = p_app
 
 
-def get_var_name_by_connector(connector):
+def get_var_name_by_connector(connector, no_constant=False):
+	if (not no_constant) and connector.get_constant():
+		return connector.get_constant()
 	return "dev_" + connector.parent.uuid + "_" + connector.name
 
 def get_var_name(uuid, name):
 	return "dev_" + uuid + "_" + name
+
+def get_connected_var(conn, connections):
+	for connection in connections:
+		if connection.input is conn:
+			return get_var_name_by_connector(connection.output)
+			
+
+
+def walk_connections(self, connections, snippets, name):
+	code_pieces = []
+	stack = []
+	prv = None
+	csnp = self
+	
+	while prv!=csnp:
+		csnp_all = []
+		for conn in connections:
+			if conn.output.parent is csnp and conn.conn_type == ConnectionType.PROPAGATE:
+				print(self, conn.output.name)
+				if conn.output.name == "output" or (conn.output.parent is self and conn.output.name == name):
+					csnp_all.append(conn.input.parent)
+		stack += csnp_all
+		
+		prv = csnp
+		if len(stack)>0:
+			csnp = stack.pop()
+			code_pieces.append(csnp.handle_codegen(connections, snippets))
+	
+	return code_pieces
+
 
 class VisualSnippet(BoxLayout):
 	
@@ -56,6 +88,9 @@ class VisualSnippet(BoxLayout):
 	
 	def handle_codegen(self, connections, snippets):
 		return """/*NO GENERATED CODE FROM %s*/\n""" % self.get_snippet_name()
+	
+	def get_constant(self, name):
+		return None
 	
 	def connector_factory(self, connector):
 		bt = Button(text=connector.name)
@@ -138,10 +173,13 @@ class StartSnippet(VisualSnippet):
 		  )
 	
 	def handle_codegen(self, connections, snippets):
-		code_pieces = []
+		'''code_pieces = []
 		stack = []
 		prv = None
 		csnp = self
+		for conn in connections:
+			print(conn.input.name, conn.input.is_inp, conn.output.name, conn.output.is_inp)
+		
 		while prv!=csnp:
 			csnp_all = []
 			for conn in connections:
@@ -153,8 +191,9 @@ class StartSnippet(VisualSnippet):
 			if len(stack)>0:
 				csnp = stack.pop()
 				code_pieces.append(csnp.handle_codegen(connections, snippets))
+		'''
 		
-		return code_pieces	
+		return walk_connections(self, connections, snippets, "output")
 			
 			
 
@@ -179,22 +218,25 @@ class SimpleSnippetGen():
 					return self.connectors
 			
 			def handle_codegen(self, connections, snippets):
-				if codegen:
-					connectors = self.get_connectors()
-					frm = {}
-					print(len(connectors))
-					for conn in connectors:
-						#print(conn.name, conn.is_inp)
-						if conn.is_inp:
-							for connection in connections:
-								if connection.output is conn:
-									frm[conn.name] = (get_var_name_by_connector(connection.input))
-									break
-						else:
-							frm[conn.name]	= get_var_name_by_connector(conn)
-					return codegen.format(**frm)
-				else:
-					return super().handle_codegen(connections, snippets)
+				try:
+					if codegen:
+						connectors = self.get_connectors()
+						frm = {}
+						print(len(connectors))
+						for conn in connectors:
+							if conn.is_inp:
+								for connection in connections:
+									if connection.input is conn:
+										frm[conn.name] = (get_var_name_by_connector(connection.output))
+										break
+							else:
+								frm[conn.name]	= get_var_name_by_connector(conn)
+						return codegen.format(**frm)
+					else:
+						return super().handle_codegen(connections, snippets)
+				except Exception as e:
+					print("Exception encoutered while handling codegen of %s" % name)
+					raise e
 		return SimpleSnippet
 	@staticmethod
 	def init():
@@ -280,17 +322,25 @@ class IntValue(VisualSnippet):
 	def get_connectors(self):
 		return (
 			Connector(ConnectionType.INT, self, False, name="value"),
-		) + super().get_connectors()
+		)# + super().get_connectors()
 	
 	def handle_codegen(self, connections, snippets):
-		return "int %s = %s;" % (get_var_name(self.uuid, "value"), self.value)
+		#return "int %s = %s;" % (get_var_name(self.uuid, "value"), self.value)
+		return "/* IntValue */"
 	
 	def text_input_factory(self):
 		def cb(text):
 			self.value = int(text.text)
+			print(self.value)
 		
 		ti = IntInput(multiline=False, size_hint_y=None, height=30, on_text_validate=cb, text="0")
 		return ti
+		
+	def get_constant(self, name):
+		if name == "value":
+			return self.value
+		else:
+			return super().get_constant(name)
 		
 	
 	def on_next_sched(self, dt):
@@ -299,10 +349,70 @@ class IntValue(VisualSnippet):
 		super().on_next_sched(dt)
 
 
+
+class I2OSnippet(VisualSnippet):
+	def get_connectors(self):
+		if hasattr(self, "conns"):
+			return self.conns
+		self.conns = super().get_connectors() + \
+		(
+		 Connector(ConnectionType.PROPAGATE, self, False, name="inb"),
+		)
+		return self.conns
+	
+	def handle_trees(self, second, connections):
+		pass
+	
+	def handle_codegen(self, connections, snippets):
+		#prim = walk_connections(self, connections, snippets, "output")
+		sec = walk_connections(self, connections, snippets, "inb")
+		return self.handle_trees(sec, connections)
+
+
+
+class IfSnippet(I2OSnippet):
+	@staticmethod
+	def get_snippet_name():
+		return "branch"
+	def get_connectors(self):
+		if hasattr(self, "conns"):
+			return self.conns
+		self.conns = super().get_connectors() + \
+		(
+		 Connector(ConnectionType.BOOL, self, True, name="value"),
+		)
+		return self.conns
+	def handle_trees(self, r, connections):
+		code_pieces = []
+		v_name = get_connected_var(self.get_connectors()[-1], connections)
+		code_pieces.append("if (%s) {" % v_name)
+		code_pieces.append(r)
+		code_pieces.append("}")
+		return code_pieces
+
+
+
+class LoopForever(I2OSnippet):
+	@staticmethod
+	def get_snippet_name():
+		return "loop"
+	def handle_trees(self, r, connections):
+		code_pieces = []
+		code_pieces.append("while (true) {")
+		code_pieces.append(r)
+		code_pieces.append("}")
+		return code_pieces
+
+
+
+#class BoolValue
+
 snippets.append(StartSnippet)
 snippets.append(SetVariable)
 snippets.append(GetVariable)
 snippets.append(IntValue)
+snippets.append(IfSnippet)
+snippets.append(LoopForever)
 
 class VisualEditor(FloatLayout):
 	grid_lay			= ObjectProperty(None)
@@ -314,7 +424,7 @@ class VisualEditor(FloatLayout):
 		global app
 		
 		Clock.schedule_once(self.init_grid_lay, 1)
-		Clock.schedule_interval(self.update, 1/20)
+		Clock.schedule_interval(self.update, 1/30)
 		super(VisualEditor, self).__init__(**kwargs)
 		Window.bind(on_motion=self.on_motion)
 		
@@ -323,20 +433,26 @@ class VisualEditor(FloatLayout):
 		
 		app.editor = self
 		
-		self.line_group = InstructionGroup()
-		self.canvas.add(self.line_group)
+		self.line_group = None
+		
+		
 	
 	def get_state(self):
 		return (self.connections, self.snippet_area.children)
 	
 	def update(self, dt):
-		if len(self.connections)>0:
-			self.line_group.clear()
-			for conn in self.connections:
-				self.line_group.add(Color(*conn.get_color()))           #TODO
-				self.line_group.add(Line(points=(conn.input.get_pos()+conn.output.get_pos()), width=1))
-		else:
-			self.line_group.clear()
+		if self.snippet_area and self.line_group is None:
+			self.line_group = InstructionGroup()
+			self.snippet_area.canvas.add(self.line_group)
+		
+		if self.line_group:
+			if len(self.connections)>0:
+				self.line_group.clear()
+				for conn in self.connections:
+					self.line_group.add(Color(*conn.get_color()))
+					self.line_group.add(Line(points=(conn.input.get_pos()+conn.output.get_pos()), width=1))
+			else:
+				self.line_group.clear()
 					
 			
 	def try_to_make_connection(self):
@@ -459,3 +575,6 @@ class VisualEditor(FloatLayout):
 
 SimpleSnippetGen.init()
 
+snippets = [snp for snp in snippets if hasattr(snp, "get_snippet_name")]
+#snippets.sort(key = lambda x:len(x.get_snippet_name()))
+snippets.sort(key = lambda x:x.get_snippet_name())
