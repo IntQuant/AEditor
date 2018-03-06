@@ -22,7 +22,8 @@
 				"type": "INT",
 				"name": "pin"
 			}
-		]
+		],
+		"codegen": "{value} = test_pin({pin});"
 	},
 	{
 		"name": "SetOutput",
@@ -96,47 +97,5 @@
 			}
 		],
 		"codegen": "delay_ms({time_ms});"
-	},
-	{
-		"name": "ValueTrue",
-		"connections": [
-			{
-				"input": "true",
-				"type": "PROPAGATE",
-				"name": "input"
-			},
-			{
-				"input": "false",
-				"type": "BOOL",
-				"name": "value"
-			},
-			{
-				"input": "false",
-				"type": "PROPAGATE",
-				"name": "output"
-			}
-		],
-		"codegen": "bool {value} = true;"
-	},
-	{
-		"name": "ValueFalse",
-		"connections": [
-			{
-				"input": "true",
-				"type": "PROPAGATE",
-				"name": "input"
-			},
-			{
-				"input": "false",
-				"type": "BOOL",
-				"name": "value"
-			},
-			{
-				"input": "false",
-				"type": "PROPAGATE",
-				"name": "output"
-			}
-		],
-		"codegen": "bool {value} = false;"
 	}
 ]

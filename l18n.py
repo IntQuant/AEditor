@@ -6,6 +6,7 @@ import locale
 from kivy.logger import Logger
 
 current = {}
+nfe = set()
 load_thread = None
 
 
@@ -30,10 +31,14 @@ def get_int(name, default=0):
 
 def get(name):
 	global current
+	global nfe
 	join()
 	if name in current:
 		return current[name]
 	else:
+		if name not in nfe:
+			Logger.warning("l18n: not found %s" % name)
+			nfe.add(name)
 		return name
 
 
@@ -69,6 +74,8 @@ def load(lang="en_US"):
 	
 	with open("./lang/"+lang, 'r') as f:
 		for line in f:
+			if len(line) < 3:
+				continue
 			try:
 				ind, val = line.split("=")
 				current[ind] = val[:-1]

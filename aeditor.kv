@@ -23,10 +23,12 @@
 		orientation: "vertical"
 		id: conn_area		
 		Button: 
-			text: root.get_snippet_name()
+			text: get(root.get_snippet_name())
 			size_hint_y: None
 			height: 20
+			text_size: self.size
 			on_press: root.editor.remove_snippet(root)			
+			
 
 <VisualEditor>:
 	grid_lay: box_lay
@@ -35,7 +37,7 @@
 		pos: root.pos
 		ScrollView:
 			pos: root.pos
-			width: 200
+			width: 150
 			size_hint_x: None
 			do_scroll_x: False
 			BoxLayout:

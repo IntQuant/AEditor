@@ -7,6 +7,7 @@ from kivy.app 					import App
 from kivy.uix.floatlayout		import FloatLayout
 from kivy.uix.boxlayout			import BoxLayout
 from kivy.uix.button			import Button
+from kivy.uix.switch			import Switch
 from kivy.properties			import ObjectProperty, ListProperty, \
 									   BooleanProperty, StringProperty, \
 									   NumericProperty
@@ -21,6 +22,8 @@ from QLibs 						import qvec
 from connections 				import Connection, ConnectionType, Connector
 from codegen 					import generate
 
+import l18n
+
 MOVE_BUTTON = "right"
 
 snippets = []
@@ -33,11 +36,9 @@ def get_next_uuid():
 	next_uuid += 1
 	return (hex(next_uuid-1)[2:]).rjust(16, '0')
 
-
 def set_app(p_app):
 	global app
 	app = p_app
-
 
 def get_var_name_by_connector(connector, no_constant=False):
 	if (not no_constant) and connector.get_constant():
@@ -51,8 +52,6 @@ def get_connected_var(conn, connections):
 	for connection in connections:
 		if connection.input is conn:
 			return get_var_name_by_connector(connection.output)
-			
-
 
 def walk_connections(self, connections, snippets, name):
 	code_pieces = []
@@ -93,7 +92,7 @@ class VisualSnippet(BoxLayout):
 		return None
 	
 	def connector_factory(self, connector):
-		bt = Button(text=connector.name)
+		bt = Button(text=l18n.get(connector.name))
 		def disp(*args):
 			if connector.is_inp:
 				self.editor.connection_starter 	= connector
@@ -110,6 +109,8 @@ class VisualSnippet(BoxLayout):
 		super().__init__(**kwargs)
 		Clock.schedule_once(self.on_next_sched)
 		self.uuid = get_next_uuid()
+		self.x += 300 #Костыль
+		self.y += 500
 	
 		
 	def get_state(self):
@@ -160,8 +161,6 @@ class VisualSnippet(BoxLayout):
 		
 		return super().on_touch_up(touch)
 
-
-
 class StartSnippet(VisualSnippet):
 	@staticmethod
 	def get_snippet_name():
@@ -194,8 +193,6 @@ class StartSnippet(VisualSnippet):
 		'''
 		
 		return walk_connections(self, connections, snippets, "output")
-			
-			
 
 class SimpleSnippetGen():
 	@staticmethod
@@ -272,8 +269,6 @@ class SetVariable(VisualSnippet):
 		return (
 			Connector(ConnectionType.INT, self, True, name="value"),
 		) + super().get_connectors()
-		
-		
 
 class GetVariable(VisualSnippet):
 	var_name = StringProperty()
@@ -302,16 +297,12 @@ class GetVariable(VisualSnippet):
 			self.conn_area.add_widget(self.text_input_factory())
 		super().on_next_sched(dt)
 
-
-
 class IntInput(TextInput):
 	def insert_text(self, pat, from_undo=False):
 		s = "".join([ch for ch in pat if ch.isalnum() if int(ch) in range(10)])
 		return super(IntInput, self).insert_text(s, from_undo=from_undo)
 	def on_enter(self):
 		self.text = str(int(self.text))
-
-
 
 class IntValue(VisualSnippet):
 	value = NumericProperty(0)
@@ -338,17 +329,49 @@ class IntValue(VisualSnippet):
 		
 	def get_constant(self, name):
 		if name == "value":
-			return self.value
+			return str(self.value)
 		else:
 			return super().get_constant(name)
-		
-	
+			
 	def on_next_sched(self, dt):
 		if self.conn_area:
 			self.conn_area.add_widget(self.text_input_factory())
 		super().on_next_sched(dt)
 
+class BoolValue(VisualSnippet):
+	value = BooleanProperty(False)
+	@staticmethod
+	def get_snippet_name():
+		return "ValueBool"
+	
+	def get_connectors(self):
+		return (
+			Connector(ConnectionType.BOOL, self, False, name="value"),
+		)# + super().get_connectors()
+	
+	def handle_codegen(self, connections, snippets):
+		#return "int %s = %s;" % (get_var_name(self.uuid, "value"), self.value)
+		return "/* BoolValue */"
+	
+	def sw_factory(self):
+		def cb(ins, val):
+			self.value = val
+			print(self.value)
+		
+		ti = Switch(size_hint_y=None, height=30)
+		ti.bind(active=cb)
+		return ti
+		
+	def get_constant(self, name):
+		if name == "value":
+			return "true" if self.value else "false"
+		else:
+			return super().get_constant(name)
 
+	def on_next_sched(self, dt):
+		if self.conn_area:
+			self.conn_area.add_widget(self.sw_factory())
+		super().on_next_sched(dt)
 
 class I2OSnippet(VisualSnippet):
 	def get_connectors(self):
@@ -356,7 +379,7 @@ class I2OSnippet(VisualSnippet):
 			return self.conns
 		self.conns = super().get_connectors() + \
 		(
-		 Connector(ConnectionType.PROPAGATE, self, False, name="inb"),
+		 Connector(ConnectionType.PROPAGATE, self, False, name="inb"+self.get_snippet_name()),
 		)
 		return self.conns
 	
@@ -365,10 +388,8 @@ class I2OSnippet(VisualSnippet):
 	
 	def handle_codegen(self, connections, snippets):
 		#prim = walk_connections(self, connections, snippets, "output")
-		sec = walk_connections(self, connections, snippets, "inb")
+		sec = walk_connections(self, connections, snippets, "inb"+self.get_snippet_name())
 		return self.handle_trees(sec, connections)
-
-
 
 class IfSnippet(I2OSnippet):
 	@staticmethod
@@ -390,8 +411,6 @@ class IfSnippet(I2OSnippet):
 		code_pieces.append("}")
 		return code_pieces
 
-
-
 class LoopForever(I2OSnippet):
 	@staticmethod
 	def get_snippet_name():
@@ -403,19 +422,17 @@ class LoopForever(I2OSnippet):
 		code_pieces.append("}")
 		return code_pieces
 
-<<<<<<< HEAD
 
 
-#class BoolValue
-
-=======
->>>>>>> dd21b768a77b5ec1befe9c9e63cf8a6bc15d46fd
 snippets.append(StartSnippet)
 snippets.append(SetVariable)
 snippets.append(GetVariable)
 snippets.append(IntValue)
+snippets.append(BoolValue)
 snippets.append(IfSnippet)
 snippets.append(LoopForever)
+
+
 
 class VisualEditor(FloatLayout):
 	grid_lay			= ObjectProperty(None)
@@ -539,7 +556,7 @@ class VisualEditor(FloatLayout):
 			snp.editor = self
 			self.snippet_area.add_widget(snp)
 			snp.pos=(self.snippet_area.height / 2, self.snippet_area.width / 2)
-		b = Button(size_hint_y=None, height=40, text=snippet.get_snippet_name())
+		b = Button(valign='middle', text_size=(100, 40),size_hint_y=None, height=40, text=l18n.get(snippet.get_snippet_name()))
 		b.bind(on_press=f)
 		return b
 	

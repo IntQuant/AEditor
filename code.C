@@ -1,7 +1,7 @@
+#define F_CPU 20000000
+
 #include <avr/io.h> //standard include for ATMega16
 #include <util/delay.h>
-
-#define F_CPU 20000000;
 
 #define sbi(x,y) x |= _BV(y) //set bit - using bitwise OR operator 
 #define cbi(x,y) x &= ~(_BV(y)) //clear bit - using bitwise AND operator
@@ -72,5 +72,6 @@ void set_pin(int ind, bool value) {
 }
 
 int main(void) { 
+set_pin_mode(10, true);
 for (;;) {}
 }

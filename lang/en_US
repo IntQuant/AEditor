@@ -1,2 +1,30 @@
 New=New File
+Upload=Upload
+Save As=Save as
+Load=Load
+Compile= 
+Save=Save
+input=in
+output=out
+value=Value
+pin=Pin
+time_ms=Time, ms
+
+inbloop=cycle
+inbbranch=then
+branch=branch
+
+loop=loop forever
+
 fileworks_panel_width=200
+
+Delay=Delay
+GetInput=Get Input
+GetOutput=Get Output
+GetVariable=Get Variable Value
+On Init=On Initialization
+SetOutput=Set Output
+SetPinMode=Set Pin Mode
+SetVariable=Set Variable Value
+ValueBool=Constant, boolean
+ValueInt=Constant, integer

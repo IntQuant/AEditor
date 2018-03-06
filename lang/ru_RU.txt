@@ -1,1 +1,30 @@
+New=Новый файл
+Upload=Загрузить на МК
+Save As=Сохранить как
+Load=Загрузить
+Compile= 
+Save=Сохранить
+input=вход
+output=выход
+inb=цикл
+value=Значение
+pin=Пин
+time_ms=Время, мс
+loop=Вечный цикл
+
+inbloop=цикл
+inbbranch=То
+branch=Если
+
 fileworks_panel_width=400
+
+Delay=Задержка
+GetInput=Прочитать значение
+
+GetVariable=Переменная
+On Init=Старт
+SetOutput=Записать значение
+SetPinMode=Режим пина
+SetVariable=Присвоить
+ValueBool=Константа, двоичное
+ValueInt=Константа, целое
