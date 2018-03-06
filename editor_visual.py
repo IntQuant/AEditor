@@ -403,10 +403,13 @@ class LoopForever(I2OSnippet):
 		code_pieces.append("}")
 		return code_pieces
 
+<<<<<<< HEAD
 
 
 #class BoolValue
 
+=======
+>>>>>>> dd21b768a77b5ec1befe9c9e63cf8a6bc15d46fd
 snippets.append(StartSnippet)
 snippets.append(SetVariable)
 snippets.append(GetVariable)
